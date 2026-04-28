@@ -1,5 +1,6 @@
 import {
   createUserWithEmailAndPassword,
+  fetchSignInMethodsForEmail,
   GoogleAuthProvider,
   signInWithCredential,
   signInWithEmailAndPassword,
@@ -26,7 +27,19 @@ export const signInWithEmail = async ({ email, password } = {}) => {
     throw new Error('Email and password are required.');
   }
 
-  return signInWithEmailAndPassword(auth, email.trim(), password);
+  try {
+    return await signInWithEmailAndPassword(auth, email.trim(), password);
+  } catch (error) {
+    if (error.code === 'auth/invalid-credential') {
+      const methods = await fetchSignInMethodsForEmail(auth, email.trim()).catch(() => []);
+      if (methods.includes('google.com')) {
+        const googleError = new Error('google-account');
+        googleError.code = 'auth/google-account';
+        throw googleError;
+      }
+    }
+    throw error;
+  }
 };
 
 export const signInWithGoogleIdToken = async ({ idToken } = {}) => {
@@ -89,4 +102,29 @@ export const saveUserProfile = async (firebaseUser) => {
 
 export const logoutUser = async () => {
   await signOut(auth);
+};
+
+export const getAuthErrorMessage = (error) => {
+  switch (error?.code) {
+    case 'auth/google-account':
+      return 'This account was created with Google. Please use "Continue with Google" to sign in.';
+    case 'auth/invalid-credential':
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+      return 'Wrong email or password. Please double-check and try again.';
+    case 'auth/email-already-in-use':
+      return 'That email is already registered. Try signing in instead.';
+    case 'auth/weak-password':
+      return 'Your password needs to be at least 6 characters long.';
+    case 'auth/invalid-email':
+      return 'That doesn\'t look like a valid email address.';
+    case 'auth/user-disabled':
+      return 'This account has been suspended. Please contact support.';
+    case 'auth/too-many-requests':
+      return 'Too many failed attempts. Please wait a moment and try again.';
+    case 'auth/network-request-failed':
+      return 'No internet connection. Please check your network and try again.';
+    default:
+      return 'Something went wrong. Please try again.';
+  }
 };

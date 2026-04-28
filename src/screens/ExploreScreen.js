@@ -1,5 +1,6 @@
 ﻿import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ActionButtons from '../components/ActionButtons';
 import DestinationCard from '../components/DestinationCard';
 import EmptyState from '../components/EmptyState';
@@ -12,6 +13,8 @@ export default function ExploreScreen({
   onUndo,
   remainingUndos,
 }) {
+  const insets = useSafeAreaInsets();
+
   const openDestinationDetails = () => {
     if (!currentDestination) {
       return;
@@ -23,7 +26,7 @@ export default function ExploreScreen({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: insets.bottom + 20 }]}>
       <Text style={styles.title}>Explore Nature</Text>
       <Text style={styles.subtitle}>Undos left today: {remainingUndos}</Text>
 

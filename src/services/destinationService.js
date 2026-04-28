@@ -1,187 +1,24 @@
-﻿const DESTINATIONS = [
-  {
-    id: 'd1',
-    name: 'Mambukal Falls',
-    category: 'Nature',
-    natureType: 'Waterfall',
-    natureTypeKey: 'waterfalls',
-    location: 'Murcia, Negros Occidental',
-    shortDescription: 'A lush eco-park with multiple falls and forest trails.',
-    fullDescription:
-      'Mambukal is a well-known mountain resort area with waterfalls, hot sulfur springs, and shaded trekking paths.',
-    imageUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=60',
-    googleMapsUrl: 'https://maps.google.com/?q=10.4332,123.1448',
-    tags: ['waterfall', 'forest', 'hiking'],
-    isActive: true,
-  },
-  {
-    id: 'd2',
-    name: 'Campuestohan Highland Resort Viewpoint',
-    category: 'Nature',
-    natureType: 'Scenic Spot',
-    natureTypeKey: 'scenicSpots',
-    location: 'Talisay City, Negros Occidental',
-    shortDescription: 'Cool-weather highland with panoramic views.',
-    fullDescription:
-      'This upland area is known for mountain vistas and wide open photo spots that are popular for quick weekend escapes.',
-    imageUrl: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=60',
-    googleMapsUrl: 'https://maps.google.com/?q=10.6994,123.1134',
-    tags: ['highland', 'viewpoint', 'weekend'],
-    isActive: true,
-  },
-  {
-    id: 'd3',
-    name: 'Lakawon Island',
-    category: 'Nature',
-    natureType: 'Beach',
-    natureTypeKey: 'beaches',
-    location: 'Cadiz City, Negros Occidental',
-    shortDescription: 'White-sand island destination with clear waters.',
-    fullDescription:
-      'Lakawon is a popular beach escape for swimming, island relaxation, and day trips with family and friends.',
-    imageUrl: 'https://images.unsplash.com/photo-1493558103817-58b2924bce98?auto=format&fit=crop&w=1200&q=60',
-    googleMapsUrl: 'https://maps.google.com/?q=10.8473,123.3198',
-    tags: ['beach', 'island', 'swimming'],
-    isActive: true,
-  },
-  {
-    id: 'd4',
-    name: 'Pulupandan Mangrove River',
-    category: 'Nature',
-    natureType: 'River',
-    natureTypeKey: 'rivers',
-    location: 'Pulupandan, Negros Occidental',
-    shortDescription: 'Quiet river stretch with mangrove surroundings.',
-    fullDescription:
-      'A calm river environment ideal for relaxed nature viewing and simple outdoor breaks away from city traffic.',
-    imageUrl: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=60',
-    googleMapsUrl: 'https://maps.google.com/?q=10.5194,122.7985',
-    tags: ['river', 'mangrove', 'relaxing'],
-    isActive: true,
-  },
-  {
-    id: 'd5',
-    name: 'Mt. Kanlaon Lower Trails',
-    category: 'Nature',
-    natureType: 'Mountain',
-    natureTypeKey: 'mountains',
-    location: 'Canlaon Boundary Area, Negros Occidental',
-    shortDescription: 'Volcanic mountain landscape with rich biodiversity.',
-    fullDescription:
-      'The Kanlaon landscape offers dramatic mountain terrain and trail experiences for outdoor enthusiasts.',
-    imageUrl: 'https://images.unsplash.com/photo-1464278533981-50106e6176b1?auto=format&fit=crop&w=1200&q=60',
-    googleMapsUrl: 'https://maps.google.com/?q=10.4118,123.1326',
-    tags: ['mountain', 'trail', 'adventure'],
-    isActive: true,
-  },
-  {
-    id: 'd6',
-    name: 'Bago River Campsite',
-    category: 'Nature',
-    natureType: 'Campsite',
-    natureTypeKey: 'campsites',
-    location: 'Bago City, Negros Occidental',
-    shortDescription: 'Simple riverside camp spot for overnight stays.',
-    fullDescription:
-      'A beginner-friendly campsite area where visitors can set up tents and enjoy an outdoor evening near running water.',
-    imageUrl: 'https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?auto=format&fit=crop&w=1200&q=60',
-    googleMapsUrl: 'https://maps.google.com/?q=10.5290,122.8362',
-    tags: ['camping', 'river', 'outdoor'],
-    isActive: true,
-  },
-  {
-    id: 'd7',
-    name: 'Balay ni Tana Dicang Garden Grounds',
-    category: 'Nature',
-    natureType: 'Nature Park',
-    natureTypeKey: 'natureParks',
-    location: 'Talisay City, Negros Occidental',
-    shortDescription: 'Historic grounds with trees and open green space.',
-    fullDescription:
-      'This heritage area includes landscaped grounds and shaded open zones suitable for leisurely nature walks.',
-    imageUrl: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1200&q=60',
-    googleMapsUrl: 'https://maps.google.com/?q=10.7448,122.9686',
-    tags: ['park', 'greenery', 'walk'],
-    isActive: true,
-  },
-  {
-    id: 'd8',
-    name: 'Sipalay Coastline',
-    category: 'Nature',
-    natureType: 'Beach',
-    natureTypeKey: 'beaches',
-    location: 'Sipalay City, Negros Occidental',
-    shortDescription: 'Long coastline with soft sand and sunset views.',
-    fullDescription:
-      'Sipalay is known for coastal getaways, clear waters, and scenic shoreline spots ideal for relaxing trips.',
-    imageUrl: 'https://images.unsplash.com/photo-1473116763249-2faaef81ccda?auto=format&fit=crop&w=1200&q=60',
-    googleMapsUrl: 'https://maps.google.com/?q=9.7516,122.4040',
-    tags: ['coast', 'beach', 'sunset'],
-    isActive: true,
-  },
-  {
-    id: 'd9',
-    name: 'Patag Upland Views',
-    category: 'Nature',
-    natureType: 'Scenic Spot',
-    natureTypeKey: 'scenicSpots',
-    location: 'Silay City, Negros Occidental',
-    shortDescription: 'Cool upland air and broad mountain scenery.',
-    fullDescription:
-      'Patag offers elevated viewpoints and a calm mountain atmosphere preferred by weekend hikers and explorers.',
-    imageUrl: 'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=1200&q=60',
-    googleMapsUrl: 'https://maps.google.com/?q=10.7899,123.0469',
-    tags: ['upland', 'mountain', 'view'],
-    isActive: true,
-  },
-  {
-    id: 'd10',
-    name: 'Malatan-og Falls',
-    category: 'Nature',
-    natureType: 'Waterfall',
-    natureTypeKey: 'waterfalls',
-    location: 'Calatrava, Negros Occidental',
-    shortDescription: 'Tiered waterfall area surrounded by greenery.',
-    fullDescription:
-      'A natural waterfall destination with cool pools and forest cover, suitable for day adventure trips.',
-    imageUrl: 'https://images.unsplash.com/photo-1433086966358-54859d0ed716?auto=format&fit=crop&w=1200&q=60',
-    googleMapsUrl: 'https://maps.google.com/?q=10.6207,123.4768',
-    tags: ['waterfall', 'nature', 'freshwater'],
-    isActive: true,
-  },
-  {
-    id: 'd11',
-    name: 'Ilog Forest Edge',
-    category: 'Nature',
-    natureType: 'Nature Park',
-    natureTypeKey: 'natureParks',
-    location: 'Ilog, Negros Occidental',
-    shortDescription: 'Green trail edge with quiet natural setting.',
-    fullDescription:
-      'An easy-access forest-edge site that works well for short walks and quick nature immersion.',
-    imageUrl: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1200&q=60',
-    googleMapsUrl: 'https://maps.google.com/?q=10.0324,122.7686',
-    tags: ['forest', 'park', 'trail'],
-    isActive: true,
-  },
-  {
-    id: 'd12',
-    name: 'Himamaylan River Bend',
-    category: 'Nature',
-    natureType: 'River',
-    natureTypeKey: 'rivers',
-    location: 'Himamaylan City, Negros Occidental',
-    shortDescription: 'Open river bend with calm natural ambiance.',
-    fullDescription:
-      'A river viewpoint destination ideal for light picnics and short nature trips with friends or family.',
-    imageUrl: 'https://images.unsplash.com/photo-1431794062232-2a99a5431c6c?auto=format&fit=crop&w=1200&q=60',
-    googleMapsUrl: 'https://maps.google.com/?q=10.0985,122.8657',
-    tags: ['river', 'picnic', 'nature'],
-    isActive: true,
-  },
-];
+import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
+import { db } from './firebase';
 
-export const fetchActiveDestinations = async () => DESTINATIONS.filter((item) => item.isActive);
+const DESTINATIONS_COLLECTION = 'destinations';
 
-export const fetchDestinationById = async (destinationId) =>
-  DESTINATIONS.find((item) => item.id === destinationId) || null;
+const mapDestinationDoc = (snapshot) => ({
+  id: snapshot.id,
+  ...snapshot.data(),
+});
+
+export const fetchActiveDestinations = async () => {
+  const q = query(collection(db, DESTINATIONS_COLLECTION), where('isActive', '==', true));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(mapDestinationDoc);
+};
+
+export const fetchDestinationById = async (destinationId) => {
+  if (!destinationId) {
+    return null;
+  }
+
+  const snapshot = await getDoc(doc(db, DESTINATIONS_COLLECTION, destinationId));
+  return snapshot.exists() ? mapDestinationDoc(snapshot) : null;
+};

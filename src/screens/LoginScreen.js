@@ -35,10 +35,17 @@ export default function LoginScreen({ onGoogleSignIn, onSignIn }) {
       });
 
       if (result?.ok === false) {
-        setErrorText(result.error || 'Authentication failed.');
+        if (result.code === 'auth/email-already-in-use') {
+          setMode('signIn');
+          setErrorText('That email is already registered. Please sign in instead.');
+        } else if (result.code === 'auth/invalid-credential' && mode === 'signIn') {
+          setErrorText('Wrong email or password. No account yet? Switch to Create Account.');
+        } else {
+          setErrorText(result.error || 'Authentication failed.');
+        }
       }
     } catch {
-      setErrorText('Authentication failed. Please try again.');
+      setErrorText('Something went wrong. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

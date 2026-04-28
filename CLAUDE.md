@@ -33,8 +33,8 @@ Copy `.env.local` is already present with Firebase and Google OAuth credentials.
 - Modal `DestinationDetailsScreen` is pushed from the root stack (not the tab navigator)
 
 **Data flow for destinations** (`src/services/destinationService.js`):
-- Destinations are a hardcoded static array — there is no Firestore collection for them
-- `fetchActiveDestinations()` filters by `isActive: true`
+- Destinations are read from the Firestore `destinations` collection
+- `fetchActiveDestinations()` queries documents where `isActive == true`
 - Each destination has a `natureTypeKey` (e.g. `'beaches'`, `'waterfalls'`) that maps to the preference system
 
 **Recommendation engine** (`src/services/recommendationService.js`):
@@ -56,6 +56,7 @@ Copy `.env.local` is already present with Firebase and Google OAuth credentials.
 - Auth uses `initializeAuth` with `AsyncStorage` persistence for React Native
 - User documents are stored in Firestore under `users/{uid}`
 - Fields persisted per user: `preferences`, `hasCompletedPreferenceSetup`, `undoCountToday`, `undoResetDate`, `lastLoginAt`
+- User activity is stored in Firestore under `users/{uid}/swipes/{destinationId}` and `users/{uid}/wishlist/{destinationId}`
 
 **Google Sign-In** (`App.js`):
 - Uses `expo-auth-session` with a promise-based bridge: `promptGoogleAuth()` is triggered, then the `useEffect` watching `googleResponse` resolves the pending promise via `pendingGoogleSignInRef`

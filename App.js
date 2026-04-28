@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as Google from 'expo-auth-session/providers/google';
+import { makeRedirectUri } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { StatusBar } from 'expo-status-bar';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -10,7 +11,10 @@ import { MAX_UNDOS_PER_DAY, RECOMMENDATION_RATIO } from './src/constants/categor
 import { fetchActiveDestinations } from './src/services/destinationService';
 import { applyDiscoveryMix, rankDestinations } from './src/services/recommendationService';
 import { auth, db } from './src/services/firebase';
+import { fetchUserSwipes, saveSwipeAction, undoLatestSwipe } from './src/services/swipeService';
+import { addToWishlist, fetchWishlist, removeFromWishlist } from './src/services/wishlistService';
 import {
+  getAuthErrorMessage,
   logoutUser,
   saveUserProfile,
   signInWithEmail,
@@ -49,9 +53,9 @@ export default function App() {
   const [hasCompletedPreferenceSetup, setHasCompletedPreferenceSetup] = useState(false);
   const [preferences, setPreferences] = useState(createEmptyPreferences());
   const [destinations, setDestinations] = useState([]);
-  const [swipedDestinationIds, setSwipedDestinationIds] = useState([]);
+  const [swipeds, setSwipeds] = useState([]);
   const [wishlistIds, setWishlistIds] = useState([]);
-  const [likedDestinationIds, setLikedDestinationIds] = useState([]);
+  const [likeds, setLikeds] = useState([]);
   const [lastSwipeAction, setLastSwipeAction] = useState(null);
   const [undoCountToday, setUndoCountToday] = useState(0);
   const [undoResetDate, setUndoResetDate] = useState(getLocalDateKey());
@@ -74,6 +78,7 @@ export default function App() {
     iosClientId: GOOGLE_CLIENT_IDS.ios || undefined,
     webClientId: GOOGLE_CLIENT_IDS.web || undefined,
     clientId: platformGoogleClientId || MISSING_GOOGLE_CLIENT_ID,
+    redirectUri: makeRedirectUri({ useProxy: true }),
     scopes: ['openid', 'profile', 'email'],
     selectAccount: true,
   });
@@ -88,9 +93,9 @@ export default function App() {
   const resetSessionState = () => {
     setHasCompletedPreferenceSetup(false);
     setPreferences(createEmptyPreferences());
-    setSwipedDestinationIds([]);
+    setSwipeds([]);
     setWishlistIds([]);
-    setLikedDestinationIds([]);
+    setLikeds([]);
     setLastSwipeAction(null);
     setUndoCountToday(0);
     setUndoResetDate(getLocalDateKey());
@@ -171,8 +176,32 @@ export default function App() {
           );
         }
 
+        const [savedSwipes, savedWishlistIds] = await Promise.all([
+          fetchUserSwipes(firebaseUser.uid),
+          fetchWishlist(firebaseUser.uid),
+        ]);
+        const nextSwipeds = savedSwipes
+          .map((swipe) => swipe.destinationId || swipe.id)
+          .filter(Boolean);
+        const nextLikeds = savedSwipes
+          .filter((swipe) => swipe.action === 'right')
+          .map((swipe) => swipe.destinationId || swipe.id)
+          .filter(Boolean);
+        const latestSwipe = savedSwipes[0]
+          ? {
+              action: savedSwipes[0].action,
+              destinationId: savedSwipes[0].destinationId || savedSwipes[0].id,
+              natureTypeKey: savedSwipes[0].natureTypeKey,
+              createdAt: savedSwipes[0].clientCreatedAt || Date.now(),
+            }
+          : null;
+
         setHasCompletedPreferenceSetup(nextSetupState);
         setPreferences(nextPreferences);
+        setSwipeds(nextSwipeds);
+        setWishlistIds(savedWishlistIds);
+        setLikeds(nextLikeds);
+        setLastSwipeAction(latestSwipe);
         setUndoCountToday(nextUndoCount);
         setUndoResetDate(nextUndoResetDate);
       } catch (error) {
@@ -238,11 +267,11 @@ export default function App() {
 
   const availableDestinations = useMemo(() => {
     const unswiped = destinations.filter(
-      (item) => item.isActive && !swipedDestinationIds.includes(item.id),
+      (item) => item.isActive && !swipeds.includes(item.id),
     );
     const ranked = rankDestinations(unswiped, preferences);
     return applyDiscoveryMix(ranked, RECOMMENDATION_RATIO.randomDiscovery);
-  }, [destinations, preferences, swipedDestinationIds]);
+  }, [destinations, preferences, swipeds]);
 
   const currentDestination = availableDestinations[0] || null;
 
@@ -264,7 +293,8 @@ export default function App() {
       console.error('Firebase email auth failed', error);
       return {
         ok: false,
-        error: error?.message || 'Unable to authenticate with email and password.',
+        code: error?.code,
+        error: getAuthErrorMessage(error),
       };
     }
   };
@@ -353,9 +383,11 @@ export default function App() {
     }
 
     const natureTypeKey = currentDestination.natureTypeKey;
+    const swipeCreatedAt = Date.now();
+    const nextPreferences = updatePreferenceByAction(preferences, natureTypeKey, action);
 
-    setPreferences((prev) => updatePreferenceByAction(prev, natureTypeKey, action));
-    setSwipedDestinationIds((prev) =>
+    setPreferences(nextPreferences);
+    setSwipeds((prev) =>
       prev.includes(currentDestination.id) ? prev : [...prev, currentDestination.id],
     );
 
@@ -366,7 +398,7 @@ export default function App() {
     }
 
     if (action === 'right') {
-      setLikedDestinationIds((prev) =>
+      setLikeds((prev) =>
         prev.includes(currentDestination.id) ? prev : [...prev, currentDestination.id],
       );
     }
@@ -375,8 +407,37 @@ export default function App() {
       action,
       destinationId: currentDestination.id,
       natureTypeKey,
-      createdAt: Date.now(),
+      createdAt: swipeCreatedAt,
     });
+
+    if (auth.currentUser?.uid) {
+      const userId = auth.currentUser.uid;
+      const writes = [
+        saveSwipeAction({
+          action,
+          clientCreatedAt: swipeCreatedAt,
+          destinationId: currentDestination.id,
+          natureTypeKey,
+          userId,
+        }),
+        setDoc(
+          doc(db, 'users', userId),
+          {
+            preferences: nextPreferences,
+            lastLoginAt: serverTimestamp(),
+          },
+          { merge: true },
+        ),
+      ];
+
+      if (action === 'love') {
+        writes.push(addToWishlist({ destinationId: currentDestination.id, userId }));
+      }
+
+      Promise.all(writes).catch((error) => {
+        console.error('Failed to persist swipe action', error);
+      });
+    }
   };
 
   const handleUndo = () => {
@@ -397,14 +458,17 @@ export default function App() {
     }
 
     const nextUndoCount = currentUndoCount + 1;
-
-    setPreferences((prev) =>
-      reverseActionOnPreference(prev, lastSwipeAction.natureTypeKey, lastSwipeAction.action),
+    const nextPreferences = reverseActionOnPreference(
+      preferences,
+      lastSwipeAction.natureTypeKey,
+      lastSwipeAction.action,
     );
-    setSwipedDestinationIds((prev) => prev.filter((id) => id !== lastSwipeAction.destinationId));
+
+    setPreferences(nextPreferences);
+    setSwipeds((prev) => prev.filter((id) => id !== lastSwipeAction.destinationId));
 
     if (lastSwipeAction.action === 'right') {
-      setLikedDestinationIds((prev) => prev.filter((id) => id !== lastSwipeAction.destinationId));
+      setLikeds((prev) => prev.filter((id) => id !== lastSwipeAction.destinationId));
     }
 
     if (lastSwipeAction.action === 'love') {
@@ -416,15 +480,26 @@ export default function App() {
     setLastSwipeAction(null);
 
     if (auth.currentUser?.uid) {
-      setDoc(
-        doc(db, 'users', auth.currentUser.uid),
-        {
-          undoCountToday: nextUndoCount,
-          undoResetDate: todayKey,
-          lastLoginAt: serverTimestamp(),
-        },
-        { merge: true },
-      ).catch((error) => {
+      const userId = auth.currentUser.uid;
+      const writes = [
+        undoLatestSwipe({ destinationId: lastSwipeAction.destinationId, userId }),
+        setDoc(
+          doc(db, 'users', userId),
+          {
+            preferences: nextPreferences,
+            undoCountToday: nextUndoCount,
+            undoResetDate: todayKey,
+            lastLoginAt: serverTimestamp(),
+          },
+          { merge: true },
+        ),
+      ];
+
+      if (lastSwipeAction.action === 'love') {
+        writes.push(removeFromWishlist({ destinationId: lastSwipeAction.destinationId, userId }));
+      }
+
+      Promise.all(writes).catch((error) => {
         console.error('Failed to persist undo counters', error);
       });
     }
@@ -450,7 +525,7 @@ export default function App() {
         currentDestination={currentDestination}
         hasCompletedPreferenceSetup={hasCompletedPreferenceSetup}
         isBootstrapping={isBootstrapping}
-        likedDestinationCount={likedDestinationIds.length}
+        likedDestinationCount={likeds.length}
         onGoogleSignIn={handleGoogleSignIn}
         onLogout={handleLogout}
         onSavePreferences={handleSavePreferences}

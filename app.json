@@ -14,11 +14,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "bundleIdentifier": "com.manongdrei.negros",
+      "bundleIdentifier": "com.@dredre123.negros",
       "supportsTablet": true
     },
     "android": {
-      "package": "com.manongdrei.negros",
+      "package": "com.@dredre123.negros",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -28,9 +28,7 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-web-browser"
-    ],
+    "plugins": ["expo-web-browser"],
     "extra": {
       "eas": {
         "projectId": "0353a308-7253-4b70-a9e1-7a43a5f7ff27"

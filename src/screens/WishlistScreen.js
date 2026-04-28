@@ -1,9 +1,12 @@
 ﻿import React from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DestinationCard from '../components/DestinationCard';
 import EmptyState from '../components/EmptyState';
 
 export default function WishlistScreen({ navigation, wishlistDestinations = [] }) {
+  const insets = useSafeAreaInsets();
+
   if (!wishlistDestinations.length) {
     return (
       <View style={styles.container}>
@@ -20,7 +23,7 @@ export default function WishlistScreen({ navigation, wishlistDestinations = [] }
     <View style={styles.container}>
       <Text style={styles.title}>Wishlist</Text>
       <FlatList
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + 24 }]}
         data={wishlistDestinations}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
