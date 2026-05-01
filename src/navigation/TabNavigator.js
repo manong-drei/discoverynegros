@@ -1,5 +1,6 @@
 ﻿import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
 import ExploreScreen from '../screens/ExploreScreen';
 import WishlistScreen from '../screens/WishlistScreen';
 import ProfileScreen from '../screens/ProfileScreen';
@@ -9,7 +10,10 @@ const Tab = createBottomTabNavigator();
 export default function TabNavigator({
   canUndo,
   currentDestination,
+  isAdmin,
   likedDestinationCount,
+  nextDestinations,
+  onRefreshUser,
   onLogout,
   onSwipe,
   onUndo,
@@ -21,9 +25,17 @@ export default function TabNavigator({
 }) {
   return (
     <Tab.Navigator
-      screenOptions={{
+      screenOptions={({ route }) => ({
         headerTitleStyle: { fontWeight: '700' },
-      }}
+        tabBarIcon: ({ color, size, focused }) => {
+          const icons = {
+            Explore: focused ? 'compass' : 'compass-outline',
+            Wishlist: focused ? 'heart' : 'heart-outline',
+            Profile: focused ? 'person' : 'person-outline',
+          };
+          return <Ionicons name={icons[route.name]} size={size} color={color} />;
+        },
+      })}
     >
       <Tab.Screen name="Explore">
         {(props) => (
@@ -31,6 +43,7 @@ export default function TabNavigator({
             {...props}
             canUndo={canUndo}
             currentDestination={currentDestination}
+            nextDestinations={nextDestinations}
             onSwipe={onSwipe}
             onUndo={onUndo}
             remainingUndos={remainingUndos}
@@ -44,7 +57,9 @@ export default function TabNavigator({
         {(props) => (
           <ProfileScreen
             {...props}
+            isAdmin={isAdmin}
             likedDestinationCount={likedDestinationCount}
+            onRefreshUser={onRefreshUser}
             onLogout={onLogout}
             preferences={preferences}
             remainingUndos={remainingUndos}

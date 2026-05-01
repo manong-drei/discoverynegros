@@ -100,6 +100,18 @@ export const saveUserProfile = async (firebaseUser) => {
   return userRef;
 };
 
+export const updateUserDisplayName = async (displayName) => {
+  if (!auth.currentUser) throw new Error('Not authenticated.');
+  const trimmed = displayName.trim();
+  if (!trimmed) throw new Error('Display name cannot be empty.');
+  await updateProfile(auth.currentUser, { displayName: trimmed });
+  await setDoc(
+    doc(db, 'users', auth.currentUser.uid),
+    { displayName: trimmed },
+    { merge: true },
+  );
+};
+
 export const logoutUser = async () => {
   await signOut(auth);
 };

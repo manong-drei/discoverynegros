@@ -1,10 +1,14 @@
-﻿import React, { useMemo } from "react";
+﻿import React, { useCallback, useMemo } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NATURE_CATEGORIES } from "../constants/categories";
 export default function ProfileScreen({
+  isAdmin,
   likedDestinationCount,
+  navigation,
   onLogout,
+  onRefreshUser,
   preferences,
   remainingUndos,
   undoCountToday,
@@ -12,6 +16,10 @@ export default function ProfileScreen({
   wishlistCount,
 }) {
   const insets = useSafeAreaInsets();
+
+  useFocusEffect(useCallback(() => {
+    onRefreshUser?.();
+  }, [onRefreshUser]));
 
   const activePreferenceLabels = useMemo(() => {
     if (!preferences) {
@@ -28,7 +36,19 @@ export default function ProfileScreen({
       <Text style={styles.title}>Profile</Text>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Account</Text>
+        <View style={styles.sectionRow}>
+          <Text style={styles.sectionTitle}>Account</Text>
+          <Pressable
+            style={styles.editButton}
+            onPress={() =>
+              navigation.navigate('EditProfile', {
+                currentDisplayName: user?.displayName,
+              })
+            }
+          >
+            <Text style={styles.editButtonText}>Edit</Text>
+          </Pressable>
+        </View>
         <Text style={styles.value}>Name: {user?.displayName || "Guest"}</Text>
         <Text style={styles.value}>Email: {user?.email || "-"}</Text>
       </View>
@@ -51,6 +71,15 @@ export default function ProfileScreen({
         <Text style={styles.value}>Undo Used Today: {undoCountToday}</Text>
         <Text style={styles.value}>Undo Remaining: {remainingUndos}</Text>
       </View>
+
+      {isAdmin && (
+        <Pressable
+          style={styles.adminButton}
+          onPress={() => navigation.navigate('DestinationManagement')}
+        >
+          <Text style={styles.adminButtonText}>Manage Destinations</Text>
+        </Pressable>
+      )}
 
       <Pressable style={styles.logoutButton} onPress={onLogout}>
         <Text style={styles.logoutButtonText}>Logout</Text>
@@ -89,8 +118,38 @@ const styles = StyleSheet.create({
     color: "#4F4F4F",
     marginBottom: 3,
   },
+  sectionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  editButton: {
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: "#2F5D50",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  editButtonText: {
+    color: "#2F5D50",
+    fontWeight: "700",
+    fontSize: 13,
+  },
+  adminButton: {
+    marginTop: 12,
+    borderRadius: 12,
+    backgroundColor: "#2F5D50",
+    alignItems: "center",
+    paddingVertical: 14,
+  },
+  adminButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 16,
+  },
   logoutButton: {
-    marginTop: 20,
+    marginTop: 12,
     borderRadius: 12,
     backgroundColor: "#B23A48",
     alignItems: "center",
