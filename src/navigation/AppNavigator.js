@@ -3,12 +3,11 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import SplashScreen from '../screens/SplashScreen';
 import DestinationDetailsScreen from '../screens/DestinationDetailsScreen';
-import DestinationFormScreen from '../screens/DestinationFormScreen';
-import DestinationManagementScreen from '../screens/DestinationManagementScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import PreferenceSetupScreen from '../screens/PreferenceSetupScreen';
 import AuthNavigator from './AuthNavigator';
 import TabNavigator from './TabNavigator';
+import AdminNavigator from './AdminNavigator';
 
 const RootStack = createNativeStackNavigator();
 
@@ -22,6 +21,7 @@ export default function AppNavigator({
   nextDestinations,
   onGoogleSignIn,
   onLogout,
+  onRemoveFromWishlist,
   onSavePreferences,
   onSignIn,
   onSwipe,
@@ -48,6 +48,8 @@ export default function AppNavigator({
   return (
     <NavigationContainer>
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
+
+        {/* Unauthenticated */}
         {!isLoggedIn && (
           <RootStack.Screen name="Auth">
             {(props) => (
@@ -60,13 +62,22 @@ export default function AppNavigator({
           </RootStack.Screen>
         )}
 
-        {isLoggedIn && !hasCompletedPreferenceSetup && (
+        {/* Admin flow — skip preference setup, go straight to admin UI */}
+        {isLoggedIn && isAdmin && (
+          <RootStack.Screen name="AdminRoot">
+            {(props) => <AdminNavigator {...props} onLogout={onLogout} />}
+          </RootStack.Screen>
+        )}
+
+        {/* Regular user — preference setup first */}
+        {isLoggedIn && !isAdmin && !hasCompletedPreferenceSetup && (
           <RootStack.Screen name="PreferenceSetup">
             {(props) => <PreferenceSetupScreen {...props} onContinue={onSavePreferences} />}
           </RootStack.Screen>
         )}
 
-        {isLoggedIn && hasCompletedPreferenceSetup && (
+        {/* Regular user — main app */}
+        {isLoggedIn && !isAdmin && hasCompletedPreferenceSetup && (
           <>
             <RootStack.Screen name="MainTabs">
               {(props) => (
@@ -79,6 +90,7 @@ export default function AppNavigator({
                   nextDestinations={nextDestinations}
                   onRefreshUser={onRefreshUser}
                   onLogout={onLogout}
+                  onRemoveFromWishlist={onRemoveFromWishlist}
                   onSwipe={onSwipe}
                   onUndo={onUndo}
                   preferences={preferences}
@@ -99,21 +111,9 @@ export default function AppNavigator({
               component={EditProfileScreen}
               options={{ headerShown: true, title: 'Edit Profile' }}
             />
-            <RootStack.Screen
-              name="DestinationManagement"
-              component={DestinationManagementScreen}
-              options={{ headerShown: true, title: 'Manage Destinations' }}
-            />
-            <RootStack.Screen
-              name="DestinationForm"
-              component={DestinationFormScreen}
-              options={({ route }) => ({
-                headerShown: true,
-                title: route.params?.destination ? 'Edit Destination' : 'New Destination',
-              })}
-            />
           </>
         )}
+
       </RootStack.Navigator>
     </NavigationContainer>
   );

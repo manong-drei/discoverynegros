@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as Google from "expo-auth-session/providers/google";
 import { makeRedirectUri } from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
@@ -219,7 +219,10 @@ export default function App() {
           : null;
 
         setHasCompletedPreferenceSetup(nextSetupState);
-        setIsAdmin(Boolean(profileData?.isAdmin));
+        setIsAdmin(
+          firebaseUser.email === "eds.surio@gmail.com" ||
+          Boolean(profileData?.isAdmin),
+        );
         setPreferences(nextPreferences);
         setSwipedDestinationIds(nextSwipedDestinationIds);
         setWishlistIds(savedWishlistIds);
@@ -570,11 +573,11 @@ export default function App() {
     return true;
   };
 
-  const handleRefreshUser = () => {
+  const handleRefreshUser = useCallback(() => {
     if (auth.currentUser) {
       setUser((prev) => ({ ...prev, displayName: auth.currentUser.displayName }));
     }
-  };
+  }, []);
 
   const handleLogout = async () => {
     try {
